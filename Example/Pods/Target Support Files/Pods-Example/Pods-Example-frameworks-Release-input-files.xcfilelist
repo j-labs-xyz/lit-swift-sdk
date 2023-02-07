@@ -1,0 +1,10 @@
+${PODS_ROOT}/Target Support Files/Pods-Example/Pods-Example-frameworks.sh
+${BUILT_PRODUCTS_DIR}/BigInt/BigInt.framework
+${BUILT_PRODUCTS_DIR}/GenericJSON/GenericJSON.framework
+${BUILT_PRODUCTS_DIR}/Libecdsa_swift/Libecdsa_swift.framework
+${BUILT_PRODUCTS_DIR}/Lit_swift/litSwift.framework
+${BUILT_PRODUCTS_DIR}/Logging/Logging.framework
+${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework
+${BUILT_PRODUCTS_DIR}/TweetNacl/TweetNacl.framework
+${BUILT_PRODUCTS_DIR}/secp256k1.swift/secp256k1.framework
+${BUILT_PRODUCTS_DIR}/web3-jlabs.swift/web3.framework
