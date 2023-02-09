@@ -119,7 +119,7 @@ enum VMType: String {
     case CVM
 }
 
-enum SigTYpe: String {
+enum SigType: String {
     case BLS
     case ECDSA
 }
@@ -159,3 +159,5 @@ public class LITEVMChain: LITChainRequiredProps {
         super.init(name: name, symbol: symbol, decimals: decimals, rpcUrls: rpcUrls, blockExplorerUrls: blockExplorerUrls, vmType: vmType)
     }
 }
+
+let LIT_SESSION_KEY_URI = "lit:session:"

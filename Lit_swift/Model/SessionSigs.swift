@@ -16,9 +16,9 @@ public struct GetSessionSigsProps {
     let resource: [String]
     let sessionCapabilities: [String] = []
     let switchChain: Bool
-    let authNeededCallback: AuthNeededCallback?
+    let authNeededCallback: AuthNeededCallback
     let sessionKey: String?
-    public init(expiration: Date?, chain: Chain, resource: [String], switchChain: Bool, authNeededCallback: AuthNeededCallback?, sessionKey: String? = nil) {
+    public init(expiration: Date?, chain: Chain, resource: [String], switchChain: Bool, authNeededCallback: @escaping AuthNeededCallback, sessionKey: String? = nil) {
         self.expiration = expiration
         self.chain = chain
         self.resource = resource
@@ -71,14 +71,13 @@ public struct SignSessionKeyProp {
     
     let pkpPublicKey: String
     
-    let expiration: Date?
-    
+    let expiration: Date
 
     let resouces: [String]
     
     let chain: Chain
     
-    public init(sessionKey: String, authMethods: [AuthMethod], pkpPublicKey: String, expiration: Date?, resouces: [String], chain: Chain) {
+    public init(sessionKey: String, authMethods: [AuthMethod], pkpPublicKey: String, expiration: Date, resouces: [String], chain: Chain) {
         self.sessionKey = sessionKey
         self.authMethods = authMethods
         self.pkpPublicKey = pkpPublicKey
@@ -102,11 +101,10 @@ struct SessionRequestBody {
             "authMethods" : authMethods.map {
                     [
                         "authMethodType" : $0.authMethodType,
-                    "accessToken" : $0.accessToken
+                        "accessToken" : $0.accessToken
                     ]
                 },
             "pkpPublicKey" : pkpPublicKey,
-//            "authSig" : authSig?.toBody() ?? "",
             "siweMessage" : siweMessage
             ]
     }
@@ -143,5 +141,4 @@ public struct JsonAuthSig {
     
 }
 
-let LIT_SESSION_KEY_URI = "lit:session:"
 
