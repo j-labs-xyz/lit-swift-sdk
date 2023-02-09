@@ -31,13 +31,6 @@ public class LitClient {
     
     var networkPubKeySet: String?
     
-    
-    var auth: [String: Any]?
-    
-    public func updateAuth(_ auth: [String: Any]) {
-        self.auth = auth
-    }
-    
     public init(config: LitNodeClientConfig? = nil) {
         self.config = config ?? LitNodeClientConfig.default()
         
