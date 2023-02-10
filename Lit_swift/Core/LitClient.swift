@@ -33,7 +33,6 @@ public class LitClient {
     
     public init(config: LitNodeClientConfig? = nil) {
         self.config = config ?? LitNodeClientConfig.default()
-        
     }
 
     public func connect() -> Promise<Void>  {
