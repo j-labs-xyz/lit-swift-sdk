@@ -10,12 +10,31 @@ import PromiseKit
 import web3
 
 public extension LitClient {
-    
-    func sendPKPTransaction(toAddress: String, fromAddress: String, value: String, data: String, chain:Chain, publicKey: String, gasPrice: String?, gasLimit: String?) -> Promise<String> {
+    /**
+     * Signs & sends the transaction using the Provider on the given chain
+     */
+    func sendPKPTransaction(toAddress: String,
+                            fromAddress: String,
+                            value: String,
+                            data: String,
+                            chain: Chain,
+                            auth: [String: Any],
+                            publicKey: String,
+                            gasPrice: String? = nil,
+                            gasLimit: String? = nil) -> Promise<String> {
         
         return Promise<String> { resolver in
-            let _ = signPKPTransaction(toAddress: toAddress, value: value, data: data, chain: chain, publicKey: publicKey, gasPrice: gasPrice, gasLimit: gasLimit).done { res in
-                guard let res = res as? [String: Any] else { return resolver.reject(LitError.COMMON) }
+            let _ = signPKPTransaction(toAddress: toAddress,
+                                       value: value,
+                                       data: data,
+                                       chain: chain,
+                                       publicKey: publicKey,
+                                       auth: auth,
+                                       gasPrice: gasPrice,
+                                       gasLimit: gasLimit).done { res in
+                guard let res = res as? [String: Any] else {
+                    return resolver.reject(LitError.litNotReady)
+                }
                 
                 var transactionModel: EthereumTransaction?
                 if var transaction = res["response"] as? [String: Any] {
@@ -28,31 +47,23 @@ public extension LitClient {
                         resolver.reject(error)
                     }
                 }
+                
                 let value = transactionModel?.value?.web3.hexString ?? ""
                 let gasPrice = transactionModel?.gasPrice?.web3.hexString ?? ""
 
-                print("From:\(transactionModel?.from?.value ?? "")")
-                print("To:\(transactionModel?.to.value ?? "")")
-                print("Value: \(value)")
-                print("GasPrice: \(gasPrice)")
-
-                transactionModel?.data = Data()
-                transactionModel?.chainId = LIT_CHAINS[chain]!.chainId
-                print("-------------")
                 
-                if let transactionModel = transactionModel,
+                if var transactionModel = transactionModel,
                    let signature = res["signature"] as? [String: Any],
                     let r = (signature["r"] as? String)?.web3.hexData,
                    let s = (signature["s"] as? String)?.web3.hexData,
-                    var recid = signature["recid"] as? Int,
-                   let joinedSignature = self.joinSignature(r: (signature["r"] as? String) ?? "", v: UInt8(signature["recid"] as? Int ?? 0), s: (signature["s"] as? String) ?? "") {
-                    print("R: \(r.web3.hexString)")
-                    print("S: \(s.web3.hexString)")
-                    print("Recid: \(recid)")
-                    print("joinedSignature: \(joinedSignature)")
+                    var recid = signature["recid"] as? Int {
+    
+                    transactionModel.data = Data()
+                    
+                    transactionModel.chainId = LIT_CHAINS[chain]!.chainId
+                
                     recid = recid == 1 ? 28 : 27
                     recid += (transactionModel.chainId ?? -1) * 2 + 8
-
 
                     let signedTransactionModel = SignedTransaction(transaction: transactionModel, v: recid, r: r, s: s)
                     if let transactionHex = signedTransactionModel.raw?.web3.hexString {
@@ -60,8 +71,7 @@ public extension LitClient {
                         Task {
                             do {
                                 let data = try await web3.networkProvider.send(method: "eth_sendRawTransaction", params:  [transactionHex], receive: String.self)
-                                if let resDataString = data as? String{
-                                    print("Transaction: \(resDataString)")
+                                if let resDataString = data as? String {
                                     resolver.fulfill(resDataString)
                                 } else {
                                     resolver.reject(LitError.unexpectedReturnValue)
@@ -71,10 +81,10 @@ public extension LitClient {
                             }
                         }
                     } else {
-                        resolver.reject(LitError.unexpectedReturnValue)
+                        resolver.reject(LitError.invalidSignedTransaction)
                     }
                 } else {
-                    resolver.reject(LitError.unexpectedReturnValue)
+                    resolver.reject(LitError.invalidTransaction)
                 }
             }.catch { error in
                 resolver.reject(error)
@@ -83,18 +93,25 @@ public extension LitClient {
 
     }
     
-    func signPKPTransaction(toAddress: String, value: String, data: String, chain:Chain, publicKey: String, gasPrice: String?, gasLimit: String?) -> Promise<Any> {
+    /**
+     * Crafts & signs the transaction using LitActions.signEcdsa() on the given chain
+     */
+    func signPKPTransaction(toAddress: String,
+                            value: String,
+                            data: String,
+                            chain:Chain,
+                            publicKey: String,
+                            auth: [String: Any],
+                            gasPrice: String? = nil,
+                            gasLimit: String? = nil) -> Promise<Any> {
         guard self.isReady else {
-            return Promise(error: LitError.COMMON)
+            return Promise(error: LitError.litNotReady)
         }
         
         guard let chainId = LIT_CHAINS[chain]?.chainId else {
-            return Promise(error: LitError.INVALID_CHAIN)
+            return Promise(error: LitError.invalidChain)
         }
-        
-        guard let auth = self.auth else {
-            return Promise(error: LitError.COMMON)
-        }
+
         
         let signLitTransaction = """
         (async () => {

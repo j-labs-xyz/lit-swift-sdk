@@ -7,24 +7,31 @@
 
 import Foundation
 import web3
+
 extension Collection where Element == String {
-    
     
     var mostCommonString: String? {
         return self.sorted { first, second in
             return self.filter({ $0 == first }).count > self.filter({ $0 == second }).count
         }.first
-        
+    }
+    
+    func toBase64String() throws -> String {
+       return try JSONSerialization.data(withJSONObject: self).base64EncodedString()
+    }
+    
+    func toJsonString() throws -> String? {
+        let data = try JSONSerialization.data(withJSONObject: self)
+        return String(data: data, encoding: .utf8)
     }
 }
-
 
 extension String {
     func asUrl() throws -> URL {
         if let url = URL(string: self) {
             return url
         }
-        throw LitError.INVALID_URL(self)
+        throw LitError.invalidUrl(self)
     }
     
     static func random(minimumLength min: Int, maximumLength max: Int) -> String {
@@ -69,23 +76,17 @@ extension String {
         return Data(self.utf8).base64EncodedString()
     }
 }
-
-extension Collection where Element == String {
-    func toBase64String() throws -> String {
-       return try JSONSerialization.data(withJSONObject: self).base64EncodedString()
-    }
-    
-    func toJsonString() throws -> String? {
-        let data = try JSONSerialization.data(withJSONObject: self)
-        return String(data: data, encoding: .utf8)
-    }
-}
-
 extension Data {
     func toBase16String() -> String? {
         return self.web3.hexString.web3.noHexPrefix
     }
-    
+}
+
+extension Date {
+    var ISOString: String {
+        let formatter = ISO8601DateFormatter()
+        return formatter.string(from: self)
+    }
 }
 
 

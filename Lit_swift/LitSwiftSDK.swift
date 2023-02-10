@@ -8,8 +8,6 @@
 
 import Foundation
 
-public let version = "1.2.7"
-
-public var litLogEnable = true
+let version = "1.2.7"
 
 

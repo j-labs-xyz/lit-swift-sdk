@@ -8,13 +8,15 @@
 import Foundation
 import PromiseKit
 extension LitClient {
+    
+    /**
+     * Execute JS on the nodes and combine and return any resulting signatures
+     */
     func executeJs(code: String?, ipfsId: String?, authSig: [String: Any]?,  sessionSigs: [String: Any]?, authMethods: [AuthMethod]?, jsParams: [String: Any], debug: Bool = true) -> Promise<Any> {
         guard self.isReady else {
-            return Promise(error: LitError.COMMON)
+            return Promise(error: LitError.litNotReady)
         }
-        
-        let jsParams = convertLitActionsParams(jsParams: jsParams)
-        
+                
         var reqBody:[String: Any] = [:]
         reqBody["authSig"] = authSig
         reqBody["jsParams"] = jsParams
@@ -27,7 +29,7 @@ extension LitClient {
         } else if let ipfsId = ipfsId {
             reqBody["ipfsId"] = ipfsId
         } else {
-            return Promise(error: LitError.COMMON)
+            return Promise(error: LitError.emptyJSResource)
         }
 
         
@@ -46,23 +48,26 @@ extension LitClient {
         return Promise<Any> { resolver in
             let _ = when(fulfilled: allPromises, concurrently: 4).done { [weak self] nodeResponses in
                 guard let `self` = self else {
-                    return resolver.reject(LitError.COMMON)
+                    return resolver.reject(LitError.clientDeinit)
                 }
                 let signedDataList = nodeResponses.compactMap( { $0.signedData?.sessionSig })
                 let sigType =  signedDataList.map { $0.sigType }.mostCommonString
                 
                 var signature: [String: Any] = [:]
-                if sigType == SigTYpe.BLS.rawValue {
-                    signature = self.combineBlsShares(shares: signedDataList, networkPubKeySet: self.networkPubKeySet ?? "")
-                }  else if sigType == SigTYpe.ECDSA.rawValue {
+                if sigType == SigType.ECDSA.rawValue {
                     signature = self.combineEcdsaShares(shares: signedDataList)
+                } else {
+                    return resolver.reject(LitError.unsupportSigType)
                 }
                 
                 var signatureResult: [String: Any] = signature
-                signatureResult["publicKey"] = "0x" + (signedDataList.compactMap { $0.publicKey }.mostCommonString ?? "")
-                signatureResult["dataSigned"] = "0x" + (signedDataList.compactMap { $0.dataSigned }.mostCommonString ?? "")
+                signatureResult["publicKey"] = (signedDataList.compactMap { $0.publicKey }.mostCommonString ?? "").web3.withHexPrefix
+                signatureResult["dataSigned"] = "0x" + (signedDataList.compactMap { $0.dataSigned }.mostCommonString ?? "").web3.withHexPrefix
 
-                if let r = signature["r"] as? String, let s = signature["s"] as? String, let recid = signature["recid"] as? UInt8, let joinedSignature = self.joinSignature(r: r, v: recid, s: s) {
+                if let r = signature["r"] as? String,
+                   let s = signature["s"] as? String,
+                   let recid = signature["recid"] as? UInt8,
+                    let joinedSignature = self.joinSignature(r: r, v: recid, s: s) {
                     signatureResult["signature"] = joinedSignature
                 }
                 
@@ -84,17 +89,10 @@ extension LitClient {
                 resolver.reject(error)
             }
         }
-        
-       
     }
     
     func getJsExecutionShares(_ url: String, params: [String: Any]) -> Promise<NodeShareResponse>  {
         let urlWithPath = "\(url)/web/execute"
         return fetch(urlWithPath, parameters: params, decodeType: NodeShareResponse.self)
     }
-    
-    func convertLitActionsParams(jsParams: [String: Any]) -> [String: Any] {
-        return jsParams
-    }
-    
 }

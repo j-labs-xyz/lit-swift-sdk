@@ -12,9 +12,6 @@ func fetch<T: Decodable>(_ urlString: String, parameters: [String: Any], decodeT
     return firstly {
          URLSession.shared.dataTask(.promise, with: try makeUrlRequest(urlString, parameters: parameters)).validate()
     }.map {
-        if litLogEnable, let json = try? JSONSerialization.jsonObject(with: $0.data) {
-            print(json)
-        }
         return try JSONDecoder().decode(decodeType.self, from: $0.data)
     }
 }

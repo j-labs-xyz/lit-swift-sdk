@@ -72,17 +72,18 @@ public class LitNodeClientConfig {
     var alertWhenUnauthorized: Bool
     var minNodeCount: Int
     var debug: Bool
-    var bootstrapUrls: [String]
     var litNetwork: LitNetwork
-    public init(alertWhenUnauthorized: Bool = true,
-                minNodeCount: Int = 6,
-                debug: Bool = true,
-                bootstrapUrls: [String] = LitNetwork.jalapeno.networks,
-                litNetwork: LitNetwork = LitNetwork.jalapeno) {
+    public init(alertWhenUnauthorized: Bool,
+                minNodeCount: Int,
+                debug: Bool,
+                litNetwork: LitNetwork) {
         self.alertWhenUnauthorized = alertWhenUnauthorized
         self.minNodeCount = minNodeCount
         self.debug = debug
-        self.bootstrapUrls = bootstrapUrls
         self.litNetwork = litNetwork
+    }
+    
+    static func `default`() -> LitNodeClientConfig {
+        return LitNodeClientConfig(alertWhenUnauthorized: true, minNodeCount: 6, debug: true, litNetwork: .serrano)
     }
 }

@@ -7,13 +7,17 @@
 
 import Foundation
 public enum LitError: Error {
-    case INVALID_URL(String)
-    case INIT_KEYPAIR_ERROR
-    case UNSUPPORTED_CHAIN_EXCEPTION(String)
-    case LIT_NODE_CLIENT_NOT_READY_ERROR
-    case INVALID_PUBLIC_KEY
-    case INVALID_CHAIN
-    
+    case invalidSignedTransaction
+    case invalidTransaction
+    case invalidChain
+    case emptyJSResource
+    case unsupportSigType
+    case invalidPublicKey
+    case litNotReady
+    case emptyCapabilities
+    case clientDeinit
     case unexpectedReturnValue
-    case COMMON
+    case invalidNodeShares
+    case invalidKeyPair
+    case invalidUrl(String)
 }
