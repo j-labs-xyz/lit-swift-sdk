@@ -276,65 +276,65 @@ extension LitClient {
 
 
 extension LitClient {
-     
-     func combineEcdsaShares(shares: [NodeShare]) -> [String: Any] {
-         let r_x = shares[0].localX
-         let r_y = shares[0].localY
-         let validShares = shares.map { $0.signatureShare }
-         let validSharesJson = try? validShares.toJsonString()
-         if let res = combine_signature(r_x, ry: r_y, shares: validSharesJson ?? "") {
-             return res
-         }
-         return [:]
-     }
-     
-     func getSessionKeyUri(_ publicKey: String) -> String {
-         return LIT_SESSION_KEY_URI + publicKey
-     }
-     
-     func getSessionCapabilities(_ capabilities: [String]?, resources: [String]) -> [String]? {
-         var capabilities = capabilities ?? []
-         if capabilities.count == 0 {
-             capabilities = resources.map({
-                 let (protocolType, _) = parseResource($0)
-                 return "\(protocolType)Capability://*"
-             })
-         }
-         return capabilities
+    
     func getRandomRequestId() -> String {
         return String.random(minimumLength: 8, maximumLength: 20)
     }
     
-
-     }
-     
-     func parseResource(_ resource: String) -> (protocolType: String, resourceId: String) {
-         return (resource.components(separatedBy: "://").first ?? "", resource.components(separatedBy: "://").last ?? "")
-     }
+    func combineEcdsaShares(shares: [NodeShare]) -> [String: Any] {
+        let r_x = shares[0].localX
+        let r_y = shares[0].localY
+        let validShares = shares.map { $0.signatureShare }
+        let validSharesJson = try? validShares.toJsonString()
+        if let res = combine_signature(r_x, ry: r_y, shares: validSharesJson ?? "") {
+            return res
+        }
+        return [:]
+    }
     
-
-     func computeAddress(publicKey: String) -> String? {
-         var pkpPublicKeyData = publicKey.web3.hexData
-         pkpPublicKeyData = pkpPublicKeyData?.dropFirst()
-         if let pkpPublicKeyHash = pkpPublicKeyData?.web3.keccak256 {
-             let address = pkpPublicKeyHash.subdata(in: 12..<pkpPublicKeyHash.count)
-             return address.web3.hexString
-         }
-         return nil
-     }
-     
-     func joinSignature(r: String, v: UInt8, s: String) -> String? {
-         guard  let rData = r.web3.hexData,  let sData = s.web3.hexData else {
-             return nil
-         }
-         var signature = rData
-         signature.append(sData)
-         if v == 1 {
-             signature.append(contentsOf: [0x1c])
-         } else {
-             signature.append(contentsOf: [0x1b])
-         }
-         return signature.web3.hexString
-     }
+   
+    func getSessionKeyUri(_ publicKey: String) -> String {
+        return LIT_SESSION_KEY_URI + publicKey
+    }
     
+    func getSessionCapabilities(_ capabilities: [String]?, resources: [String]) -> [String]? {
+        var capabilities = capabilities ?? []
+        if capabilities.count == 0 {
+            capabilities = resources.map({
+                let (protocolType, _) = parseResource($0)
+                return "\(protocolType)Capability://*"
+            })
+        }
+        return capabilities
+
+    }
+    
+    func parseResource(_ resource: String) -> (protocolType: String, resourceId: String) {
+        return (resource.components(separatedBy: "://").first ?? "", resource.components(separatedBy: "://").last ?? "")
+    }
+   
+
+    func computeAddress(publicKey: String) -> String? {
+        var pkpPublicKeyData = publicKey.web3.hexData
+        pkpPublicKeyData = pkpPublicKeyData?.dropFirst()
+        if let pkpPublicKeyHash = pkpPublicKeyData?.web3.keccak256 {
+            let address = pkpPublicKeyHash.subdata(in: 12..<pkpPublicKeyHash.count)
+            return address.web3.hexString
+        }
+        return nil
+    }
+    
+    func joinSignature(r: String, v: UInt8, s: String) -> String? {
+        guard  let rData = r.web3.hexData,  let sData = s.web3.hexData else {
+            return nil
+        }
+        var signature = rData
+        signature.append(sData)
+        if v == 1 {
+            signature.append(contentsOf: [0x1c])
+        } else {
+            signature.append(contentsOf: [0x1b])
+        }
+        return signature.web3.hexString
+    }
 }

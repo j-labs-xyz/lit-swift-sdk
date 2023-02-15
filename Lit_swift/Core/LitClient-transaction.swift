@@ -47,11 +47,7 @@ public extension LitClient {
                         resolver.reject(error)
                     }
                 }
-                
-                let value = transactionModel?.value?.web3.hexString ?? ""
-                let gasPrice = transactionModel?.gasPrice?.web3.hexString ?? ""
 
-                
                 if var transactionModel = transactionModel,
                    let signature = res["signature"] as? [String: Any],
                     let r = (signature["r"] as? String)?.web3.hexData,
