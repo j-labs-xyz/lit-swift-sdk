@@ -34,6 +34,7 @@ extension LitClient {
 
         
         var urlGenerator = self.connectedNodes.makeIterator()
+        let requestId = getRandomRequestId()
         let allPromises = AnyIterator<Promise<NodeShareResponse>> {
             guard let url = urlGenerator.next() else {
                 return nil
@@ -41,7 +42,7 @@ extension LitClient {
             if let sig = sessionSigs?[url] as? [String: Any] {
                 reqBody["authSig"] = sig
             }
-            return self.getJsExecutionShares(url, params: reqBody)
+            return self.getJsExecutionShares(url, requestId: requestId, params: reqBody)
         }
         
         
@@ -91,8 +92,8 @@ extension LitClient {
         }
     }
     
-    func getJsExecutionShares(_ url: String, params: [String: Any]) -> Promise<NodeShareResponse>  {
+    func getJsExecutionShares(_ url: String, requestId: String, params: [String: Any]) -> Promise<NodeShareResponse>  {
         let urlWithPath = "\(url)/web/execute"
-        return fetch(urlWithPath, parameters: params, decodeType: NodeShareResponse.self)
+        return fetch(urlWithPath, requestId: requestId, parameters: params, decodeType: NodeShareResponse.self)
     }
 }

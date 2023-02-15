@@ -38,11 +38,12 @@ public class LitClient {
     public func connect() -> Promise<Void>  {
         // handshake with each node
         var urlGenerator = self.config.litNetwork.networks.makeIterator()
+        let requestId = getRandomRequestId()
         let allPromises = AnyIterator<Promise<NodeCommandServerKeysResponse>> {
             guard let url = urlGenerator.next() else {
                 return nil
             }
-            return self.handshakeWithNode(url).then { response in
+            return self.handshakeWithNode(url, requestId: requestId).then { response in
                 
                 // append the connected node url
                 self.connectedNodes.insert(url)
@@ -184,12 +185,13 @@ public class LitClient {
         
         
         var urlGenerator = self.connectedNodes.makeIterator()
+        let requestId = getRandomRequestId()
         let allPromises = AnyIterator<Promise<NodeShareResponse>> {
             guard let url = urlGenerator.next() else {
                 return nil
             }
             // get signature shares
-            return self.getSignSessionKeyShares(url, params: reqBody)
+            return self.getSignSessionKeyShares(url, requestId: requestId, params: reqBody)
         }
         return Promise<JsonAuthSig> { resolver in
             when(fulfilled: allPromises, concurrently: 4).done ({ [weak self] nodeResponses in
@@ -250,19 +252,25 @@ public class LitClient {
 }
 
 extension LitClient {
-    func handshakeWithNode(_ url: String) -> Promise<NodeCommandServerKeysResponse> {
+    func handshakeWithNode(_ url: String, requestId: String) -> Promise<NodeCommandServerKeysResponse> {
         let urlWithPath = "\(url)/web/handshake"
         let parameters = ["clientPublicKey" : "test"]
-        return fetch(urlWithPath, parameters: parameters, decodeType: NodeCommandServerKeysResponse.self)
+        return fetch(urlWithPath,
+                     requestId: requestId,
+                     parameters: parameters,
+                     decodeType: NodeCommandServerKeysResponse.self)
     }
     
 
     func getSignSessionKeyShares(_ url: String,
+                                 requestId: String,
                                  params: SessionRequestBody) -> Promise<NodeShareResponse> {
         let urlWithPath = url + "/web/sign_session_key"
         let parameters = params.toBody()
-        
-        return fetch(urlWithPath, parameters: parameters, decodeType: NodeShareResponse.self)
+        return fetch(urlWithPath,
+                     requestId: requestId,
+                     parameters: parameters,
+                     decodeType: NodeShareResponse.self)
     }
 }
 
@@ -293,6 +301,10 @@ extension LitClient {
              })
          }
          return capabilities
+    func getRandomRequestId() -> String {
+        return String.random(minimumLength: 8, maximumLength: 20)
+    }
+    
 
      }
      
