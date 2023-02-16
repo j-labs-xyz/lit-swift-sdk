@@ -55,9 +55,7 @@ public extension LitClient {
                     var recid = signature["recid"] as? Int {
     
                     transactionModel.data = Data()
-                    
-                    transactionModel.chainId = LIT_CHAINS[chain]!.chainId
-                
+                    transactionModel.chainId = LIT_CHAINS[chain]?.chainId as? Int
                     recid = recid == 1 ? 28 : 27
                     recid += (transactionModel.chainId ?? -1) * 2 + 8
 
