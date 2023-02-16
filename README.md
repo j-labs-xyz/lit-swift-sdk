@@ -11,6 +11,14 @@ Then run the following command
 
 `pod install`
 
+# Build
+```
+cd Example
+pod install
+```
+open `Example.xcworkspace`
+
+`Lit_swift` is in folder: `Pods/Development Pods/Lit_swift` 
 
 # Example
 
