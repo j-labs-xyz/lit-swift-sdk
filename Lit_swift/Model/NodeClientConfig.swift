@@ -11,9 +11,7 @@ public enum LitNetwork: String {
     case jalapeno
     case serrano
     case localhost
-    case mumbai
-    case custom
-    
+    case mumbai    
     public var networks: [String] {
         switch self {
         case .jalapeno:
@@ -62,8 +60,7 @@ public enum LitNetwork: String {
                 "https://polygon-mumbai.litgateway.com:7371",
                 "https://polygon-mumbai.litgateway.com:7372",
             ]
-        case .custom:
-            return []
+
         }
     }
 }
