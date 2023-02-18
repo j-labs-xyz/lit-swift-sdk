@@ -81,9 +81,7 @@ public class LitClient {
     
         let sessionKeyUrl = getSessionKeyUri(sessionKey.publicKey)
         
-        guard let capabilities = getSessionCapabilities(params.sessionCapabilities, resources: params.resource) else {
-            return Promise(error: LitError.emptyCapabilities)
-        }
+        let capabilities = getSessionCapabilities(params.sessionCapabilities, resources: params.resource) ?? []
         
         let expiration = params.expiration ?? Date(timeIntervalSinceNow: 7 * 60 * 60 * 24)
         
@@ -148,7 +146,7 @@ public class LitClient {
      */
     public func signSessionKey(_ params: SignSessionKeyProp) -> Promise<JsonAuthSig> {
         guard self.ready else {
-            return Promise(error: LitError.litNotReady)
+            return Promise(error: LitError.litNodeClientNotReady)
         }
         
         guard let addressValue = self.computeAddress(publicKey: params.pkpPublicKey) else {
@@ -217,10 +215,10 @@ public class LitClient {
                                                       address: ethereumAddress.value)
                         return resolver.fulfill(jsonAuthSig)
                     } else {
-                        return resolver.reject(LitError.invalidNodeShares)
+                        return resolver.reject(LitError.invalidCombinedShares)
                     }
                 } else {
-                    return resolver.reject(LitError.unsupportSigType)
+                    return resolver.reject(LitError.unknownSignatureType)
                 }
                 
            }).catch { error in

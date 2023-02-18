@@ -12,9 +12,9 @@ extension LitClient {
     /**
      * Execute JS on the nodes and combine and return any resulting signatures
      */
-    func executeJs(code: String?, ipfsId: String?, authSig: [String: Any]?,  sessionSigs: [String: Any]?, authMethods: [AuthMethod]?, jsParams: [String: Any], debug: Bool = true) -> Promise<Any> {
+    func executeJs(code: String?, ipfsId: String?, authSig: [String: Any]?,  sessionSigs: [String: Any]?, authMethods: [AuthMethod]?, jsParams: [String: Any], debug: Bool = true) -> Promise<[String: Any]> {
         guard self.isReady else {
-            return Promise(error: LitError.litNotReady)
+            return Promise(error: LitError.litNodeClientNotReady)
         }
                 
         var reqBody:[String: Any] = [:]
@@ -46,7 +46,7 @@ extension LitClient {
         }
         
         
-        return Promise<Any> { resolver in
+        return Promise<[String: Any]> { resolver in
             let _ = when(fulfilled: allPromises, concurrently: 4).done { [weak self] nodeResponses in
                 guard let `self` = self else {
                     return resolver.reject(LitError.clientDeinit)
@@ -58,7 +58,7 @@ extension LitClient {
                 if sigType == SigType.ECDSA.rawValue {
                     signature = self.combineEcdsaShares(shares: signedDataList)
                 } else {
-                    return resolver.reject(LitError.unsupportSigType)
+                    return resolver.reject(LitError.unknownSignatureType)
                 }
                 
                 var signatureResult: [String: Any] = signature

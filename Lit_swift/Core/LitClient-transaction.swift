@@ -24,6 +24,12 @@ public extension LitClient {
                             gasLimit: String? = nil) -> Promise<String> {
         
         return Promise<String> { resolver in
+            
+            guard self.isReady else {
+                resolver.reject(LitError.litNodeClientNotReady)
+                return
+            }
+            
             let _ = signPKPTransaction(toAddress: toAddress,
                                        value: value,
                                        data: data,
@@ -32,17 +38,13 @@ public extension LitClient {
                                        auth: auth,
                                        gasPrice: gasPrice,
                                        gasLimit: gasLimit).done { res in
-                guard let res = res as? [String: Any] else {
-                    return resolver.reject(LitError.litNotReady)
-                }
-                
+    
                 var transactionModel: EthereumTransaction?
                 if var transaction = res["response"] as? [String: Any] {
                     transaction["from"] = fromAddress
                     let transactionData = try? JSONSerialization.data(withJSONObject: transaction)
                     do {
                         transactionModel = try JSONDecoder().decode(EthereumTransaction.self, from: transactionData ?? Data())
-
                     } catch {
                         resolver.reject(error)
                     }
@@ -78,7 +80,7 @@ public extension LitClient {
                         resolver.reject(LitError.invalidSignedTransaction)
                     }
                 } else {
-                    resolver.reject(LitError.invalidTransaction)
+                    resolver.reject(LitError.invalidTransactionSignature)
                 }
             }.catch { error in
                 resolver.reject(error)
@@ -97,13 +99,13 @@ public extension LitClient {
                             publicKey: String,
                             auth: [String: Any],
                             gasPrice: String? = nil,
-                            gasLimit: String? = nil) -> Promise<Any> {
+                            gasLimit: String? = nil) -> Promise<[String: Any]> {
         guard self.isReady else {
-            return Promise(error: LitError.litNotReady)
+            return Promise(error: LitError.litNodeClientNotReady)
         }
         
         guard let chainId = LIT_CHAINS[chain]?.chainId else {
-            return Promise(error: LitError.invalidChain)
+            return Promise(error: LitError.unsupportedChain)
         }
 
         
