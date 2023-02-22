@@ -81,9 +81,7 @@ public class LitClient {
     
         let sessionKeyUrl = getSessionKeyUri(sessionKey.publicKey)
         
-        guard let capabilities = getSessionCapabilities(params.sessionCapabilities, resources: params.resource) else {
-            return Promise(error: LitError.emptyCapabilities)
-        }
+        let capabilities = getSessionCapabilities(params.sessionCapabilities, resources: params.resource) ?? []
         
         let expiration = params.expiration ?? Date(timeIntervalSinceNow: 7 * 60 * 60 * 24)
         
@@ -94,7 +92,7 @@ public class LitClient {
                             sessionKeyUri: sessionKeyUrl,
                             authNeededCallback: params.authNeededCallback).then { [weak self] authSig in
             guard let `self` = self else {
-                return Promise<[String: Any]>.init(error: LitError.clientDeinit)
+                return Promise<[String: Any]>.init(error: LitError.ClientDeinit)
             }
             
             let signingTemplate: [String: Any] = [
@@ -140,7 +138,7 @@ public class LitClient {
         if let publicKey = keyPair.publicKey.toBase16String(), let secretKey = keyPair.secretKey.toBase16String() {
             return SessionKeyPair(publicKey: publicKey, secretKey: secretKey)
         }
-        throw LitError.invalidKeyPair
+        throw LitError.InvalidKeyPair
     }
     
     /**
@@ -148,11 +146,11 @@ public class LitClient {
      */
     public func signSessionKey(_ params: SignSessionKeyProp) -> Promise<JsonAuthSig> {
         guard self.ready else {
-            return Promise(error: LitError.litNotReady)
+            return Promise(error: LitError.LitNodeClientNotReadyError)
         }
         
         guard let addressValue = self.computeAddress(publicKey: params.pkpPublicKey) else {
-            return Promise(error: LitError.invalidPublicKey)
+            return Promise(error: LitError.InvalidPublicKey)
         }
         
         let ethereumAddress = EthereumAddress(addressValue)
@@ -196,7 +194,7 @@ public class LitClient {
         return Promise<JsonAuthSig> { resolver in
             when(fulfilled: allPromises, concurrently: 4).done ({ [weak self] nodeResponses in
                 guard let `self` = self else {
-                    return resolver.reject(LitError.clientDeinit)
+                    return resolver.reject(LitError.ClientDeinit)
                 }
     
                 let signedDataList = nodeResponses.compactMap( { $0.signedData?.sessionSig })
@@ -217,10 +215,10 @@ public class LitClient {
                                                       address: ethereumAddress.value)
                         return resolver.fulfill(jsonAuthSig)
                     } else {
-                        return resolver.reject(LitError.invalidNodeShares)
+                        return resolver.reject(LitError.InvalidCombinedShares)
                     }
                 } else {
-                    return resolver.reject(LitError.unsupportSigType)
+                    return resolver.reject(LitError.UnknownSignatureType)
                 }
                 
            }).catch { error in

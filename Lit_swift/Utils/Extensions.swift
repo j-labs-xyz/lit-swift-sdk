@@ -31,7 +31,7 @@ extension String {
         if let url = URL(string: self) {
             return url
         }
-        throw LitError.invalidUrl(self)
+        throw LitError.InvalidUrl(self)
     }
     
     static func random(minimumLength min: Int, maximumLength max: Int) -> String {
