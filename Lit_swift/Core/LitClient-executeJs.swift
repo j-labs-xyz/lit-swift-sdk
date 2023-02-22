@@ -14,7 +14,7 @@ extension LitClient {
      */
     func executeJs(code: String?, ipfsId: String?, authSig: [String: Any]?,  sessionSigs: [String: Any]?, authMethods: [AuthMethod]?, jsParams: [String: Any], debug: Bool = true) -> Promise<[String: Any]> {
         guard self.isReady else {
-            return Promise(error: LitError.litNodeClientNotReady)
+            return Promise(error: LitError.LitNodeClientNotReadyError)
         }
                 
         var reqBody:[String: Any] = [:]
@@ -29,7 +29,7 @@ extension LitClient {
         } else if let ipfsId = ipfsId {
             reqBody["ipfsId"] = ipfsId
         } else {
-            return Promise(error: LitError.emptyJSResource)
+            return Promise(error: LitError.EmptyJSResource)
         }
 
         
@@ -49,7 +49,7 @@ extension LitClient {
         return Promise<[String: Any]> { resolver in
             let _ = when(fulfilled: allPromises, concurrently: 4).done { [weak self] nodeResponses in
                 guard let `self` = self else {
-                    return resolver.reject(LitError.clientDeinit)
+                    return resolver.reject(LitError.ClientDeinit)
                 }
                 let signedDataList = nodeResponses.compactMap( { $0.signedData?.sessionSig })
                 let sigType =  signedDataList.map { $0.sigType }.mostCommonString
@@ -58,7 +58,7 @@ extension LitClient {
                 if sigType == SigType.ECDSA.rawValue {
                     signature = self.combineEcdsaShares(shares: signedDataList)
                 } else {
-                    return resolver.reject(LitError.unknownSignatureType)
+                    return resolver.reject(LitError.UnknownSignatureType)
                 }
                 
                 var signatureResult: [String: Any] = signature

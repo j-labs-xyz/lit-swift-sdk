@@ -26,7 +26,7 @@ public extension LitClient {
         return Promise<String> { resolver in
             
             guard self.isReady else {
-                resolver.reject(LitError.litNodeClientNotReady)
+                resolver.reject(LitError.LitNodeClientNotReadyError)
                 return
             }
             
@@ -70,17 +70,17 @@ public extension LitClient {
                                 if let resDataString = data as? String {
                                     resolver.fulfill(resDataString)
                                 } else {
-                                    resolver.reject(LitError.unexpectedReturnValue)
+                                    resolver.reject(LitError.UnexpectedReturnValue)
                                 }
                             } catch {
                                 resolver.reject(error)
                             }
                         }
                     } else {
-                        resolver.reject(LitError.invalidSignedTransaction)
+                        resolver.reject(LitError.InvalidSignedTransaction)
                     }
                 } else {
-                    resolver.reject(LitError.invalidTransactionSignature)
+                    resolver.reject(LitError.InvalidTransactionSignature)
                 }
             }.catch { error in
                 resolver.reject(error)
@@ -101,11 +101,11 @@ public extension LitClient {
                             gasPrice: String? = nil,
                             gasLimit: String? = nil) -> Promise<[String: Any]> {
         guard self.isReady else {
-            return Promise(error: LitError.litNodeClientNotReady)
+            return Promise(error: LitError.LitNodeClientNotReadyError)
         }
         
         guard let chainId = LIT_CHAINS[chain]?.chainId else {
-            return Promise(error: LitError.unsupportedChain)
+            return Promise(error: LitError.UnsupportedChainException)
         }
 
         
