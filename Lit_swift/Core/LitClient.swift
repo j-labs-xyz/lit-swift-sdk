@@ -210,7 +210,7 @@ public class LitClient {
                     if let r = res["r"] as? String,
                        let s = res["s"] as? String,
                        let recid = res["recid"] as? UInt8,
-                       let signature = self.joinSignature(r: r.zeroPad(lenght: 64), v: recid, s: s.zeroPad(lenght: 64)) {
+                       let signature = self.joinSignature(r: r, v: recid, s: s) {
                         let jsonAuthSig = JsonAuthSig(sig: signature,
                                                       derivedVia: "web3.eth.personal.sign via Lit PKP",
                                                       signedMessage: siweMessage,
@@ -325,7 +325,7 @@ extension LitClient {
     }
     
     func joinSignature(r: String, v: UInt8, s: String) -> String? {
-        guard  let rData = r.web3.hexData,  let sData = s.web3.hexData else {
+        guard let rData = r.zeroPad(lenght: 64).web3.hexData,  let sData = s.zeroPad(lenght: 64).web3.hexData else {
             return nil
         }
         var signature = rData
