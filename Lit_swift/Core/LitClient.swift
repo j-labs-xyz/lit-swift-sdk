@@ -210,7 +210,7 @@ public class LitClient {
                     if let r = res["r"] as? String,
                        let s = res["s"] as? String,
                        let recid = res["recid"] as? UInt8,
-                       let signature = self.joinSignature(r: r, v: recid, s: s) {
+                       let signature = self.joinSignature(r: r.zeroPad(lenght: 64), v: recid, s: s.zeroPad(lenght: 64)) {
                         let jsonAuthSig = JsonAuthSig(sig: signature,
                                                       derivedVia: "web3.eth.personal.sign via Lit PKP",
                                                       signedMessage: siweMessage,

@@ -61,6 +61,9 @@ extension LitClient {
                     return resolver.reject(LitError.unsupportSigType)
                 }
                 
+                signature["r"] = (signature["r"] as? String)?.zeroPad(lenght: 64)
+                signature["s"] = (signature["s"] as? String)?.zeroPad(lenght: 64)
+
                 var signatureResult: [String: Any] = signature
                 signatureResult["publicKey"] = (signedDataList.compactMap { $0.publicKey }.mostCommonString ?? "").web3.withHexPrefix
                 signatureResult["dataSigned"] = "0x" + (signedDataList.compactMap { $0.dataSigned }.mostCommonString ?? "").web3.withHexPrefix
