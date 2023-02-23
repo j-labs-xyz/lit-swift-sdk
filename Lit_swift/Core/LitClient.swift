@@ -325,7 +325,7 @@ extension LitClient {
     }
     
     func joinSignature(r: String, v: UInt8, s: String) -> String? {
-        guard  let rData = r.web3.hexData,  let sData = s.web3.hexData else {
+        guard let rData = r.zeroPad(lenght: 64).web3.hexData,  let sData = s.zeroPad(lenght: 64).web3.hexData else {
             return nil
         }
         var signature = rData

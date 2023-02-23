@@ -75,6 +75,19 @@ extension String {
     func toBase64() -> String {
         return Data(self.utf8).base64EncodedString()
     }
+    
+    func zeroPad(lenght: Int) -> String {
+        var noHexCode = self
+        var prefix = ""
+        if self.hasPrefix("0x") {
+            noHexCode = String(self[index(self.startIndex, offsetBy: 2)...])
+            prefix = "0x"
+        }
+        while noHexCode.count < lenght {
+            noHexCode = "0" + noHexCode
+        }
+        return prefix + noHexCode
+    }
 }
 extension Data {
     func toBase16String() -> String? {
