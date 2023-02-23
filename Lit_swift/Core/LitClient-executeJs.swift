@@ -57,6 +57,7 @@ extension LitClient {
                 var signature: [String: Any] = [:]
                 if sigType == SigType.ECDSA.rawValue {
                     signature = self.combineEcdsaShares(shares: signedDataList)
+                    log("combined signature: ", signature)
                 } else {
                     return resolver.reject(LitError.unsupportSigType)
                 }
@@ -69,6 +70,7 @@ extension LitClient {
                    let s = signature["s"] as? String,
                    let recid = signature["recid"] as? UInt8,
                     let joinedSignature = self.joinSignature(r: r, v: recid, s: s) {
+                    log("joined signature: ", joinedSignature)
                     signatureResult["signature"] = joinedSignature
                 }
                 
