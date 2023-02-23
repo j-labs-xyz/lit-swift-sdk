@@ -39,6 +39,7 @@ public class LitClient {
         // handshake with each node
         var urlGenerator = self.config.litNetwork.networks.makeIterator()
         let requestId = getRandomRequestId()
+        log("connecting Lit...")
         let allPromises = AnyIterator<Promise<NodeCommandServerKeysResponse>> {
             guard let url = urlGenerator.next() else {
                 return nil
@@ -59,6 +60,7 @@ public class LitClient {
             self.networkPubKey = nodeResponses.map { $0.networkPublicKey }.mostCommonString
             self.networkPubKeySet = nodeResponses.map { $0.networkPublicKeySet }.mostCommonString
             self.ready = true
+            log("🔥 lit is ready.")
         }
     }
     
@@ -198,7 +200,6 @@ public class LitClient {
                 guard let `self` = self else {
                     return resolver.reject(LitError.clientDeinit)
                 }
-    
                 let signedDataList = nodeResponses.compactMap( { $0.signedData?.sessionSig })
                 
                 let sigType =  signedDataList.map { $0.sigType }.mostCommonString
@@ -207,10 +208,12 @@ public class LitClient {
 
                 if sigType == SigType.ECDSA.rawValue {
                     let res = self.combineEcdsaShares(shares: signedDataList)
+                    log("combined signature: ", res)
                     if let r = res["r"] as? String,
                        let s = res["s"] as? String,
                        let recid = res["recid"] as? UInt8,
                        let signature = self.joinSignature(r: r, v: recid, s: s) {
+                        log("joined signature: ", signature)
                         let jsonAuthSig = JsonAuthSig(sig: signature,
                                                       derivedVia: "web3.eth.personal.sign via Lit PKP",
                                                       signedMessage: siweMessage,
@@ -286,6 +289,7 @@ extension LitClient {
         let r_y = shares[0].localY
         let validShares = shares.map { $0.signatureShare }
         let validSharesJson = try? validShares.toJsonString()
+        log("combine ecdsa shares: ", validShares);
         if let res = combine_signature(r_x, ry: r_y, shares: validSharesJson ?? "") {
             return res
         }

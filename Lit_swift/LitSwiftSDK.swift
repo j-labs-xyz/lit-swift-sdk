@@ -8,6 +8,11 @@
 
 import Foundation
 
-let version = "1.2.7"
+public enum LitSwift {
+    
+    public static let version = "1.2.7"
+    
+    public static var enableLog = false
+}
 
 
