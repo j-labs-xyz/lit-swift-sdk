@@ -21,7 +21,8 @@ public extension LitClient {
                             auth: [String: Any],
                             publicKey: String,
                             gasPrice: String? = nil,
-                            gasLimit: String? = nil) -> Promise<String> {
+                            gasLimit: String? = nil,
+                            config: LitActionConfig? = nil) -> Promise<String> {
         
         return Promise<String> { resolver in
             let _ = signPKPTransaction(toAddress: toAddress,
@@ -97,7 +98,9 @@ public extension LitClient {
                             publicKey: String,
                             auth: [String: Any],
                             gasPrice: String? = nil,
-                            gasLimit: String? = nil) -> Promise<Any> {
+                            gasLimit: String? = nil,
+                            config: LitActionConfig? = nil
+    ) -> Promise<Any> {
         guard self.isReady else {
             return Promise(error: LitError.litNotReady)
         }
@@ -105,33 +108,19 @@ public extension LitClient {
         guard let chainId = LIT_CHAINS[chain]?.chainId else {
             return Promise(error: LitError.invalidChain)
         }
-
         
+        let config = config ?? LitActionConfig.default
         let signLitTransaction = """
         (async () => {
-          const fromAddressParam = ethers.utils.computeAddress(publicKey);
-          const latestNonce = await LitActions.getLatestNonce({ address: fromAddressParam, chain });
-          const txParams = {
-            nonce: latestNonce,
-            gasPrice: gasPrice,
-            gasLimit: gasLimit,
-            to: toAddress,
-            value: value,
-            chainId: chainId,
-            data: data,
-          };
-
-          LitActions.setResponse({ response: JSON.stringify(txParams) });
-          
-          const serializedTx = ethers.utils.serializeTransaction(txParams);
-          const rlpEncodedTxn = ethers.utils.arrayify(serializedTx);
-          const unsignedTxn =  ethers.utils.arrayify(ethers.utils.keccak256(rlpEncodedTxn));
-
-          const sigShare = await LitActions.signEcdsa({ toSign: unsignedTxn, publicKey, sigName });
+        
+        // daily limit
+        \(config.maxEthValue != nil ? LitActionJSCode.getDailyLimitTransactionCode(maxValue: config.maxEthValue!) : "")
+        
+         \(LitActionJSCode.baseTransactionCode)
         })();
         """
         
-        let jsParams: [String: Any] = [
+        var jsParams: [String: Any] = [
             "publicKey" : publicKey,
             "chain": chain.rawValue,
             "sigName": "sessionSig",
@@ -142,6 +131,9 @@ public extension LitClient {
             "gasPrice" : gasPrice ?? "0x4A817C800",
             "gasLimit" : gasLimit ?? 5000.web3.hexString
         ]
+        
+        jsParams.merge(config.configParams, uniquingKeysWith: {current, _ in current })
+        
         return self.executeJs(code: signLitTransaction, ipfsId: nil, authSig: nil, sessionSigs: auth, authMethods: nil, jsParams: jsParams)
     }
 }
