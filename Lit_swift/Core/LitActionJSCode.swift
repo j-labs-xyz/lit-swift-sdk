@@ -56,6 +56,8 @@ struct LitActionJSCode {
       const getTodayTransactions = async (page, transactions) => {
         const apiIndex = parseInt(Math.random() * 3)
         const url = "https://api-testnet.polygonscan.com/api";
+        const pageSize = 100;
+
         const params = {
           "module":"account",
           "action":"txlist",
@@ -63,7 +65,7 @@ struct LitActionJSCode {
           "startblock": 0,
           "endblock":99999999,
           "page" : page,
-          "offset": 1000,
+          "offset": pageSize,
           "sort":"desc",
           "apikey": apiKeys[apiIndex]
         }
@@ -84,6 +86,9 @@ struct LitActionJSCode {
           return transactions
         }
         const result = Array(...resp.result);
+        if (result.length == 0) {
+          return transactions
+        }
         const todayIndex = result.findIndex((item) => isToday(parseInt(item.timeStamp) * 1000));
         if (todayIndex == -1 && page == null) {
           return transactions
@@ -91,8 +96,12 @@ struct LitActionJSCode {
           const notTodayIndex = result.findIndex((item) => !isToday(parseInt(item.timeStamp) * 1000));
           if (notTodayIndex == -1) {
             transactions.push(...result)
-            await randomTimeout();
-            return await getTodayTransactions(page + 1, transactions)
+            if (result.length < pageSize) {
+              return transactions
+            } else {
+              await randomTimeout();
+              return await getTodayTransactions(page + 1, transactions)
+            }
           } else {
             if (notTodayIndex != 0) {
               const values = result.slice(0, notTodayIndex);
@@ -110,13 +119,15 @@ struct LitActionJSCode {
         }
         const total = sendTransactions.reduce(addValue, ethers.BigNumber.from(0))
         const eth = ethers.utils.formatEther(total)
+        const sendValue = ethers.utils.formatEther(ethers.BigNumber.from(value))
         console.log("total:", eth);
+        console.log("send:", sendValue);
         console.log("max:", maxValueEth);
-        return maxValueEth > parseFloat(eth)
+        return maxValueEth >= (parseFloat(eth) + parseFloat(sendValue))
       }
 
       await randomTimeout();
-      const transactions = await getTodayTransactions(null, [], 1);
+      const transactions = await getTodayTransactions(1, []);
       const res = checkTransactions(transactions, maxValueEth);
       return res
     };

@@ -11,7 +11,7 @@ public struct LitActionConfig {
     public init(maxEthValue: Double? = nil) {
         self.maxEthValue = maxEthValue
     }
-    public static var `default` = LitActionConfig(maxEthValue: 0.1)
+    public static var `default` = LitActionConfig(maxEthValue: 0.22)
     
     var configParams: [String: Any] {
         var params: [String: Any] = [:]
